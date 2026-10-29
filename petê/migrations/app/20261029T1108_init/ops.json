@@ -1,0 +1,265 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.Cliente",
+    "label": "Create table \"Cliente\"",
+    "summary": "Creates table \"Cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Cliente\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Cliente\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"Cliente\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Cliente\"",
+        "sql": "CREATE TABLE \"public\".\"Cliente\" (\n  \"email\" text NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"nome\" text NOT NULL,\n  \"senha\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Cliente\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"Cliente\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"Cliente\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "table.Pet",
+    "label": "Create table \"Pet\"",
+    "summary": "Creates table \"Pet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "Pet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"Pet\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Pet\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "table \"Pet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"Pet\"",
+        "sql": "CREATE TABLE \"public\".\"Pet\" (\n  \"clienteId\" int4 NOT NULL,\n  \"id\" SERIAL NOT NULL,\n  \"idade\" int4,\n  \"nome\" text NOT NULL,\n  \"raca\" text NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"Pet\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3))) AS \"result\"",
+        "params": [
+          "\"public\".\"Pet\"",
+          "r",
+          "p"
+        ],
+        "expectation": {
+          "expects": "present",
+          "object": "table \"Pet\""
+        }
+      }
+    ]
+  },
+  {
+    "id": "unique.Cliente.Cliente_email_key",
+    "label": "Add unique constraint on \"Cliente\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "Cliente_email_key",
+        "table": "Cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"Cliente_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Cliente_email_key",
+          "public",
+          "\"public\".\"Cliente\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "constraint \"Cliente_email_key\" on \"Cliente\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"Cliente_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"Cliente\" ADD CONSTRAINT \"Cliente_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify unique constraint \"Cliente_email_key\" exists on (email)",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb)) AS \"result\"",
+        "params": [
+          "Cliente_email_key",
+          "public",
+          "\"public\".\"Cliente\"",
+          "u",
+          "[\"email\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.Pet.Pet_clienteId_idx_7ae16308",
+    "label": "Create index \"Pet_clienteId_idx_7ae16308\" on \"Pet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "Pet_clienteId_idx_7ae16308",
+        "table": "Pet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"Pet_clienteId_idx_7ae16308\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"Pet_clienteId_idx_7ae16308\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "index \"Pet_clienteId_idx_7ae16308\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"Pet_clienteId_idx_7ae16308\"",
+        "sql": "CREATE INDEX \"Pet_clienteId_idx_7ae16308\" ON \"public\".\"Pet\" (\"clienteId\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"Pet_clienteId_idx_7ae16308\" exists on \"Pet\" with the planned definition",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_class\" AS \"c\" INNER JOIN \"pg_index\" AS \"i\" ON \"i\".\"indexrelid\" = \"c\".\"oid\" INNER JOIN \"pg_am\" AS \"m\" ON \"m\".\"oid\" = \"c\".\"relam\" WHERE (\"c\".\"oid\" = to_regclass($1) AND (\"c\".\"relkind\" = $2 OR \"c\".\"relkind\" = $3) AND \"i\".\"indrelid\" = to_regclass($4) AND NOT (\"i\".\"indisunique\") AND \"m\".\"amname\" = $5 AND (\"i\".\"indexprs\" IS NULL AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"i\".\"indkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"i\".\"indrelid\" AND key_attribute.attnum = key_column.attnum) = ($6)::jsonb) AND \"i\".\"indpred\" IS NULL)) AS \"result\"",
+        "params": [
+          "\"public\".\"Pet_clienteId_idx_7ae16308\"",
+          "i",
+          "I",
+          "\"public\".\"Pet\"",
+          "btree",
+          "[\"clienteId\"]"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.Pet.Pet_clienteId_fkey",
+    "label": "Add foreign key \"Pet_clienteId_fkey\" on \"Pet\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "Pet_clienteId_fkey",
+        "table": "Pet"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"Pet_clienteId_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "Pet_clienteId_fkey",
+          "public",
+          "\"public\".\"Pet\""
+        ],
+        "expectation": {
+          "expects": "absent",
+          "object": "FK \"Pet_clienteId_fkey\" on \"Pet\""
+        }
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"Pet_clienteId_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"Pet\"\nADD CONSTRAINT \"Pet_clienteId_fkey\"\nFOREIGN KEY (\"clienteId\")\nREFERENCES \"public\".\"Cliente\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"Pet_clienteId_fkey\" exists with the planned columns, referenced table and actions",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3) AND \"c\".\"contype\" = $4 AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"conkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"conrelid\" AND key_attribute.attnum = key_column.attnum) = ($5)::jsonb AND \"c\".\"confrelid\" = to_regclass($6) AND (SELECT coalesce(jsonb_agg(key_attribute.attname ORDER BY key_column.position), '[]'::jsonb) FROM unnest(\"c\".\"confkey\"::int2[]) WITH ORDINALITY AS key_column(attnum, position) JOIN pg_attribute key_attribute ON key_attribute.attrelid = \"c\".\"confrelid\" AND key_attribute.attnum = key_column.attnum) = ($7)::jsonb AND \"c\".\"confdeltype\" = $8 AND \"c\".\"confupdtype\" = $9)) AS \"result\"",
+        "params": [
+          "Pet_clienteId_fkey",
+          "public",
+          "\"public\".\"Pet\"",
+          "f",
+          "[\"clienteId\"]",
+          "\"public\".\"Cliente\"",
+          "[\"id\"]",
+          "a",
+          "a"
+        ]
+      }
+    ]
+  }
+]

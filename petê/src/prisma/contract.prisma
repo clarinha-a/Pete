@@ -1,0 +1,18 @@
+// use prisma-8
+
+model Cliente {
+  id    Int    @id @default(autoincrement())
+  nome  String
+  email String @unique
+  senha String
+  pets  Pet[]
+}
+
+model Pet {
+  id        Int     @id @default(autoincrement())
+  nome      String
+  raca      String
+  idade     Int?
+  clienteId Int
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+}
