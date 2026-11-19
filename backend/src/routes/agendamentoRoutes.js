@@ -4,16 +4,28 @@ const router = express.Router();
 
 const agendamentoController = require('../controllers/agendamentoController');
 const autenticar = require('../middlewares/authMiddleware');
+const validarDados = require('../middlewares/validarDados');
+const validarId = require('../middlewares/validarId');
 
-// Todas as rotas exigem autenticação
-router.post('/', autenticar, agendamentoController.cadastrar);
+router.use(autenticar);
 
-router.get('/', autenticar, agendamentoController.listar);
+router.post(
+    '/',
+    validarDados(['data_hora', 'id_pet', 'id_servico', 'id_profissional']),
+    agendamentoController.cadastrar
+);
 
-router.get('/:id', autenticar, agendamentoController.buscar);
+router.get('/', agendamentoController.listar);
 
-router.put('/:id', autenticar, agendamentoController.atualizar);
+router.get('/:id', validarId, agendamentoController.buscar);
 
-router.delete('/:id', autenticar, agendamentoController.excluir);
+router.put(
+    '/:id',
+    validarId,
+    validarDados(['data_hora', 'status']),
+    agendamentoController.atualizar
+);
+
+router.delete('/:id', validarId, agendamentoController.excluir);
 
 module.exports = router;

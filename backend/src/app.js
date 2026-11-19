@@ -1,4 +1,6 @@
 
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const pool = require('./config/database');
@@ -15,13 +17,13 @@ const campanhaMarketingRoutes = require('./routes/campanhaMarketingRoutes');
 const caixaRoutes = require('./routes/caixaRoutes');
 const compraRoutes = require('./routes/compraRoutes');
 const logWhatsAppRoutes = require('./routes/logWhatsAppRoutes');
-
-require('dotenv').config();
+const logger = require('./middlewares/logger');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use(logger);
 
 // Rotas
 app.use('/usuarios', usuarioRoutes);

@@ -4,14 +4,19 @@ const router = express.Router();
 
 const compraController = require('../controllers/compraController');
 const autenticar = require('../middlewares/authMiddleware');
+const validarDados = require('../middlewares/validarDados');
+const validarId = require('../middlewares/validarId');
 
-// Todas as rotas exigem autenticação
 router.use(autenticar);
 
-router.post('/', compraController.cadastrar);
+router.post(
+    '/',
+    validarDados(['itens']),
+    compraController.cadastrar
+);
 
 router.get('/', compraController.listar);
 
-router.get('/:id', compraController.buscar);
+router.get('/:id', validarId, compraController.buscar);
 
 module.exports = router;

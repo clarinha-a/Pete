@@ -4,11 +4,15 @@ const router = express.Router();
 
 const logWhatsAppController = require('../controllers/logWhatsAppController');
 const autenticar = require('../middlewares/authMiddleware');
+const validarDados = require('../middlewares/validarDados');
 
-// Todas as rotas exigem autenticação
 router.use(autenticar);
 
-router.post('/', logWhatsAppController.cadastrar);
+router.post(
+    '/',
+    validarDados(['mensagem']),
+    logWhatsAppController.cadastrar
+);
 
 router.get('/', logWhatsAppController.listar);
 
